@@ -60,6 +60,15 @@ canvas {
   transition:background .15s;
 }
 #pauseBtn:hover { background:rgba(0,170,255,0.35); }
+#homeBtn {
+  position:absolute; top:8px; right:8px;
+  background:rgba(255,80,80,0.18); border:1.5px solid rgba(255,120,120,0.45);
+  border-radius:50px; color:#fff; font-size:12px; font-weight:700;
+  padding:4px 12px; cursor:pointer;
+  text-shadow:0 0 8px #f88; z-index:10; display:none;
+  transition:background .15s;
+}
+#homeBtn:hover { background:rgba(255,80,80,0.4); }
 #pauseOverlay {
   position:absolute; inset:0;
   background:rgba(0,0,20,0.82);
@@ -103,10 +112,12 @@ canvas {
     </div>
   </div>
   <button id="pauseBtn">⏸ 暫停</button>
+  <button id="homeBtn">🏠 主選單</button>
   <div id="pauseOverlay">
     <h2>⏸ 暫停中</h2>
     <p>按 P 鍵 或 ESC 繼續</p>
     <button class="bigBtn" id="resumeBtn">▶ 繼續遊戲</button>
+    <button class="bigBtn" id="menuBtn" style="background:linear-gradient(135deg,#f44,#900);margin-top:8px">🏠 回主選單</button>
   </div>
   <div id="levelClearOverlay"></div>
   <div id="overlay">
@@ -211,8 +222,10 @@ const levelDispEl   =document.getElementById('levelDisp');
 const killsDispEl   =document.getElementById('killsDisp');
 const startBtn      =document.getElementById('startBtn');
 const pauseBtn      =document.getElementById('pauseBtn');
+const homeBtn       =document.getElementById('homeBtn');
 const pauseOvr      =document.getElementById('pauseOverlay');
 const resumeBtn     =document.getElementById('resumeBtn');
+const menuBtn       =document.getElementById('menuBtn');
 const savedInfo     =document.getElementById('savedInfo');
 
 // ── Saved progress ─────────────────────────────────
@@ -226,6 +239,24 @@ function togglePause(){
   paused=!paused;
   pauseBtn.textContent=paused?'▶ 繼續':'⏸ 暫停';
   pauseOvr.style.display=paused?'flex':'none';
+}
+function goHome(){
+  state='idle'; paused=false;
+  pauseBtn.style.display='none';
+  homeBtn.style.display='none';
+  pauseOvr.style.display='none';
+  levelClearOvr.style.display='none';
+  enemies=[];eBullets=[];bullets=[];explosions=[];powerups=[];
+  bossActive=false; boss=null;
+  const saved=getSaved();
+  overlay.style.display='flex';
+  overlay.innerHTML=`
+    <h1>🚀 太空保衛戰</h1>
+    <p id="overlayDesc">⬆️⬇️⬅️➡️ 移動飛機<br>空白鍵 / Z 鍵發射子彈<br>消滅所有敵人即可過關！<br><br>共 <b style="color:#ff4">100 關</b>，難度越來越高！</p>
+    <button class="bigBtn" onclick="startGame()">繼續第 ${saved} 關</button>
+    ${saved>1?`<button class="bigBtn" style="background:linear-gradient(135deg,#f44,#900);margin-top:8px" onclick="startGame(1)">從第 1 關重來</button>`:''}
+    <div style="margin-top:10px;font-size:12px;color:#8df;">${saved>1?`已儲存進度：第 ${saved} 關`:''}</div>
+  `;
 }
 
 // ── Player init ────────────────────────────────────
@@ -698,13 +729,17 @@ function startGame(fromLv){
   score=0;lives=3;frame=0;
   initPlayer();initStars();updateHeartsUI();
   overlay.style.display='none';levelClearOvr.style.display='none';
-  pauseBtn.style.display='block';pauseOvr.style.display='none';
+  pauseBtn.style.display='block';
+  homeBtn.style.display='block';
+  pauseOvr.style.display='none';
   paused=false;pauseBtn.textContent='⏸ 暫停';
   startLevel();
 }
 function endGame(){
   state='idle';paused=false;
-  pauseBtn.style.display='none';pauseOvr.style.display='none';levelClearOvr.style.display='none';
+  pauseBtn.style.display='none';
+  homeBtn.style.display='none';
+  pauseOvr.style.display='none';levelClearOvr.style.display='none';
   sfxGameOver();
   overlay.style.display='flex';
   overlay.innerHTML=`
@@ -726,6 +761,8 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('keyup',e=>{keys[e.key]=false;});
 pauseBtn.addEventListener('click',togglePause);
 resumeBtn.addEventListener('click',togglePause);
+homeBtn.addEventListener('click',()=>{if(!paused)togglePause();goHome();});
+menuBtn.addEventListener('click',goHome);
 startBtn.addEventListener('click',()=>startGame());
 
 ['Up','Down','Left','Right'].forEach(dir=>{
