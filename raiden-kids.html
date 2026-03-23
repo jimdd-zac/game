@@ -117,14 +117,14 @@ canvas {
     <h2>⏸ 暫停中</h2>
     <p>按 P 鍵 或 ESC 繼續</p>
     <button class="bigBtn" id="resumeBtn">▶ 繼續遊戲</button>
-    <button class="bigBtn" id="menuBtn" style="background:linear-gradient(135deg,#f44,#900);margin-top:8px">🏠 回主選單</button>
   </div>
   <div id="levelClearOverlay"></div>
   <div id="overlay">
     <h1>🚀 太空保衛戰</h1>
     <p id="overlayDesc">⬆️⬇️⬅️➡️ 移動飛機<br>空白鍵 / Z 鍵發射子彈<br>消滅所有敵人即可過關！<br><br>共 <b style="color:#ff4">100 關</b>，難度越來越高！</p>
-    <button class="bigBtn" id="startBtn">開始遊戲！</button>
-    <div id="savedInfo" style="margin-top:12px;font-size:12px;color:#8df;"></div>
+    <button class="bigBtn" id="startBtn">▶ 繼續遊戲</button>
+    <button class="bigBtn" id="restartBtn" style="background:linear-gradient(135deg,#f44,#900);display:none">↺ 從第 1 關重來</button>
+    <div id="savedInfo" style="margin-top:10px;font-size:12px;color:#8df;"></div>
   </div>
   <div id="mobileControls">
     <div class="dpad">
@@ -231,7 +231,17 @@ const savedInfo     =document.getElementById('savedInfo');
 // ── Saved progress ─────────────────────────────────
 function getSaved(){try{return parseInt(localStorage.getItem('rk_lv'))||1;}catch(e){return 1;}}
 function doSave(lv){try{localStorage.setItem('rk_lv',lv);}catch(e){}}
-(function(){const s=getSaved();if(s>1)savedInfo.textContent=`已儲存進度：第 ${s} 關`;})();
+(function(){
+  const s=getSaved();
+  const restartBtn=document.getElementById('restartBtn');
+  if(s>1){
+    document.getElementById('startBtn').textContent=`▶ 繼續第 ${s} 關`;
+    restartBtn.style.display='block';
+    savedInfo.textContent=`已儲存進度：第 ${s} 關`;
+  } else {
+    document.getElementById('startBtn').textContent='▶ 開始遊戲！';
+  }
+})();
 
 // ── Pause ──────────────────────────────────────────
 function togglePause(){
@@ -252,9 +262,9 @@ function goHome(){
   overlay.style.display='flex';
   overlay.innerHTML=`
     <h1>🚀 太空保衛戰</h1>
-    <p id="overlayDesc">⬆️⬇️⬅️➡️ 移動飛機<br>空白鍵 / Z 鍵發射子彈<br>消滅所有敵人即可過關！<br><br>共 <b style="color:#ff4">100 關</b>，難度越來越高！</p>
-    <button class="bigBtn" onclick="startGame()">繼續第 ${saved} 關</button>
-    ${saved>1?`<button class="bigBtn" style="background:linear-gradient(135deg,#f44,#900);margin-top:8px" onclick="startGame(1)">從第 1 關重來</button>`:''}
+    <p>⬆️⬇️⬅️➡️ 移動飛機<br>空白鍵 / Z 鍵發射子彈<br>消滅所有敵人即可過關！<br><br>共 <b style="color:#ff4">100 關</b>，難度越來越高！</p>
+    <button class="bigBtn" onclick="startGame()">▶ 繼續第 ${saved} 關</button>
+    ${saved>1?`<button class="bigBtn" style="background:linear-gradient(135deg,#f44,#900);margin-top:8px" onclick="startGame(1)">↺ 從第 1 關重來</button>`:''}
     <div style="margin-top:10px;font-size:12px;color:#8df;">${saved>1?`已儲存進度：第 ${saved} 關`:''}</div>
   `;
 }
@@ -762,8 +772,9 @@ document.addEventListener('keyup',e=>{keys[e.key]=false;});
 pauseBtn.addEventListener('click',togglePause);
 resumeBtn.addEventListener('click',togglePause);
 homeBtn.addEventListener('click',()=>{if(!paused)togglePause();goHome();});
-menuBtn.addEventListener('click',goHome);
 startBtn.addEventListener('click',()=>startGame());
+const restartBtn=document.getElementById('restartBtn');
+if(restartBtn)restartBtn.addEventListener('click',()=>startGame(1));
 
 ['Up','Down','Left','Right'].forEach(dir=>{
   const btn=document.getElementById('btn'+dir);
